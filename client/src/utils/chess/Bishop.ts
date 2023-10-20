@@ -1,22 +1,22 @@
 import Hex from "./Hex";
 import Piece from "./Piece";
+import Board from "./Board";
 
 export default class Bishop extends Piece {
-    private _delta: Set<string> = new Set<string>([
-        '2,-1,-1',
-        '1,-2,1',
-        '-1,-1,2',
-        '-2,1,1',
-        '-1,2-1',
-        '1,1,-2'
-    ])
-
     constructor(white: boolean) {
         super(white)
+        this._delta = new Set<string>([
+            '2,-1,-1',
+            '1,-2,1',
+            '-1,-1,2',
+            '-2,1,1',
+            '-1,2,-1',
+            '1,1,-2'
+        ])
     }
 
-    public canMove(start: Hex, end: Hex): boolean {
-        if (end.piece.white && this.white) {
+    public canMove(board: Board, start: Hex, end: Hex): boolean {
+        if (end.piece?.white && this.white) {
             return false
         }
 
@@ -29,7 +29,47 @@ export default class Bishop extends Piece {
         const factor = direction % 2
         const delta = `${q/factor},${r/factor},${s/factor}`
 
-        if (this._delta.has(delta)) return true
-        else return false
+        if (end.piece === null) return false
+        else {
+            if (this.delta.has(delta)) {
+                let startQ = start.q, startR = start.r
+    
+                for (;;) {
+                    const endQ = startQ - q, endR = startR - r
+                    
+                    if (endQ === end.q && endR === end.r) return true
+                    if (board.getHex(endQ, endR).piece) return false
+    
+                    startQ = endQ
+                    startR = endR
+                }
+            }
+            
+            return false
+        }
+    }
+
+    public getAvailableMoves(board: Board, start: Hex): number[][] {
+        const availableMoves: number[][] = []
+        for (const value of this.delta) {
+            let startQ = start.q, startR = start.r
+            
+            const deltas = value.split(',')
+            const deltaQ = parseInt(deltas[0])
+            const deltaR = parseInt(deltas[1])
+            for (;;) {
+                const endQ = start.q + deltaQ, endR = start.r + deltaR
+                const startHex = board.getHex(startQ, startR)
+                const endHex = board.getHex(endQ, endR)
+
+                if (endQ < 0 || endR < 0 || endQ < 0 || endQ > 10 || endHex.piece === null) break
+                if (this.canMove(board, startHex, endHex)) availableMoves.push([endQ, endR])
+                else break
+
+                startQ = endQ
+                startR = endR
+            }
+        }
+        return availableMoves
     }
 }

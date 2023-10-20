@@ -15,7 +15,7 @@ export default class Hex {
         return this._piece
     }
 
-    public set piece(p: Piece) {
+    public set piece(p: Piece | null | undefined) {
         this._piece = p
     }
 
@@ -33,5 +33,11 @@ export default class Hex {
 
     public set r(r: number) {
         this._r = r
+    }
+
+    public getPixel(size: number) {
+        const x = size * (3/2 * this.q)
+        const y = size * (Math.sqrt(3/2) * this.q + Math.sqrt(3) * this.r)
+        return [x, y]
     }
 }
