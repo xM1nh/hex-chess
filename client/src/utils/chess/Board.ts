@@ -121,7 +121,7 @@ export default class Board {
         this._board[r][q].piece = piece
     }
 
-    public isChecked(color: Color): boolean {
+    public isCheck(color: Color): boolean {
         const kingHex = color === 'w' ? this.kings.w : this.kings.b
         const opponentActiveHex = color === 'w' ? this.activeBlackHex : this.activeWhiteHex
             for (const value of opponentActiveHex) {
@@ -131,5 +131,15 @@ export default class Board {
                 if (!activeHex.piece?.canMove(this, activeHex, kingHex)) return true
             }
         return false
+    }
+
+    public isCheckMate(color: Color): boolean {
+        const kingHex = color === 'w' ? this.kings.w : this.kings.b
+        return this.isCheck(color) && kingHex.piece?.getAvailableMoves(this, kingHex).length === 0
+    }
+
+    public isStaleMate(color: Color): boolean {
+        const kingHex = color === 'w' ? this.kings.w : this.kings.b
+        return !this.isCheck(color) && kingHex.piece?.getAvailableMoves(this, kingHex).length === 0
     }
 }

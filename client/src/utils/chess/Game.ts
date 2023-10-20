@@ -7,16 +7,12 @@ const GAME_STATE: {
     ACTIVE: string,
     BLACK_WIN: string,
     WHITE_WIN: string,
-    FORFEIT: string,
     STALEMATE: string,
-    RESIGN: string
 } = {
     ACTIVE: 'ACTIVE',
     BLACK_WIN: 'BLACK_WIN',
     WHITE_WIN: 'WHITE_WIN',
-    FORFEIT: 'FORFEIT',
     STALEMATE: 'STATEMATE',
-    RESIGN: 'RESIGN'
 }
 
 export default class Game {
@@ -106,7 +102,7 @@ export default class Game {
         const color = player.white ? 'w' : 'b'
         this._internalBoard.setHex(startQ, startR, undefined)
         this._internalBoard.setHex(endQ, endR, piece)
-        if (this._internalBoard.isChecked(color)) return false
+        if (this._internalBoard.isCheck(color)) return false
 
 
         if (endPiece) {
@@ -121,11 +117,21 @@ export default class Game {
 
         this._addToHistory(move)
 
+        if (this.board.isCheckMate(color)) {
+            if (color === 'w') this.state = 'BLACK_WIN'
+            else this.state = 'WHITE_WIN'
+        }
+
+        if (this.board.isStaleMate(color)) this.state = 'STALEMATE'
+
         if (this.turn === this._players[0]) this.turn = this._players[1]
         else this.turn = this._players[0]
 
         return true
     }
 
-
+    public resign(player: Player) {
+        if (player.white) this.state = 'BLACK_WIN'
+        else this.state = 'WHITE_WIN'
+    }
 }
