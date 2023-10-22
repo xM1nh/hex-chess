@@ -1,0 +1,57 @@
+.hex {
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.hint {
+    border-radius: 50%;
+    background-color: rgba(0,0,0,0.1);
+}
+
+.bp {
+    background-image: url('../../assets/chess/bp.svg.png');
+}
+
+.wp {
+    background-image: url('../../assets/chess/wp.svg.png');
+}
+
+.wr {
+    background-image: url('../../assets/chess/wr.svg.png');
+}
+
+.br {
+    background-image: url('../../assets/chess/br.svg.png');
+}
+
+.bk {
+    background-image: url('../../assets/chess/bk.svg.png');
+}
+
+.wk {
+    background-image: url('../../assets/chess/wk.svg.png');
+}
+
+.bn {
+    background-image: url('../../assets/chess/bn.svg.png');
+}
+
+.wn {
+    background-image: url('../../assets/chess/wn.svg.png');
+}
+.wb {
+    background-image: url('../../assets/chess/wb.svg.png');
+}
+
+.bb {
+    background-image: url('../../assets/chess/bb.svg.png');
+}
+
+.wq {
+    background-image: url('../../assets/chess/wq.svg.png');
+}
+
+.bq {
+    background-image: url('../../assets/chess/bq.svg.png');
+}
