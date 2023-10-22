@@ -1,0 +1,17 @@
+:root {
+    --aspect-ratio: 1973/ 2200
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.board {
+    height: 90vh;
+    aspect-ratio: var(--aspect-ratio);
+    background-image: url('../../assets/chess/Board.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: relative;
+}
