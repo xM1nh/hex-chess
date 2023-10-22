@@ -16,7 +16,7 @@ export default class Rook extends Piece {
     }
 
     public canMove(board: Board, start: Hex, end: Hex): boolean {
-        if (end.piece?.white && this.white) {
+        if (end.piece?.white === this.white) {
             return false
         }
 
@@ -31,8 +31,9 @@ export default class Rook extends Piece {
         else {   
             if (this.delta.has(delta)) {
                 let startQ = start.q, startR = start.r
-    
-                for (;;) {
+                
+                //break condition. rook can only travel for a maximum of 11 hexes
+                for (let i = 0; i < 11; i++) {
                     const endQ = startQ - q, endR = startR - r
                     
                     if (endQ === end.q && endR === end.r) return true
@@ -47,21 +48,23 @@ export default class Rook extends Piece {
         }
     }
 
-    public getAvailableMoves(board: Board, start: Hex): number[][] {
-        const availableMoves: number[][] = []
+    public getAvailableMoves(board: Board, start: Hex): Hex[] {
+        const availableMoves: Hex[] = []
         for (const value of this.delta) {
             let startQ = start.q, startR = start.r
             
             const deltas = value.split(',')
             const deltaQ = parseInt(deltas[0])
             const deltaR = parseInt(deltas[1])
-            for (;;) {
-                const endQ = start.q + deltaQ, endR = start.r + deltaR
+            for (let i = 0; i < 11; i++) {
+                const endQ = startQ + deltaQ, endR = startR + deltaR
+
+                if (endR < 0 || endR > 10 || endQ < 0 || endQ > 10) break
                 const startHex = board.getHex(startQ, startR)
                 const endHex = board.getHex(endQ, endR)
 
-                if (endQ < 0 || endR < 0 || endQ < 0 || endQ > 10 || endHex.piece === null) break
-                if (this.canMove(board, startHex, endHex)) availableMoves.push([endQ, endR])
+                if (endHex.piece === null) break
+                if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
                 else break
 
                 startQ = endQ
@@ -69,5 +72,9 @@ export default class Rook extends Piece {
             }
         }
         return availableMoves
+    }
+
+    public ascii(): string {
+        return this.white ? 'wr' : 'br'
     }
 }

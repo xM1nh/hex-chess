@@ -16,7 +16,7 @@ export default class Bishop extends Piece {
     }
 
     public canMove(board: Board, start: Hex, end: Hex): boolean {
-        if (end.piece?.white && this.white) {
+        if (end.piece?.white === this.white) {
             return false
         }
 
@@ -26,15 +26,16 @@ export default class Bishop extends Piece {
 
         const direction = Math.max(Math.abs(q), Math.abs(r), Math.abs(s))
 
-        const factor = direction % 2
+        const factor = direction / 2
         const delta = `${q/factor},${r/factor},${s/factor}`
 
         if (end.piece === null) return false
         else {
             if (this.delta.has(delta)) {
                 let startQ = start.q, startR = start.r
-    
-                for (;;) {
+                
+                //break condition. Bishop can only travel for a maximum of 6 hexes
+                for (let i = 0; i < 6; i++) {
                     const endQ = startQ - q, endR = startR - r
                     
                     if (endQ === end.q && endR === end.r) return true
@@ -49,8 +50,8 @@ export default class Bishop extends Piece {
         }
     }
 
-    public getAvailableMoves(board: Board, start: Hex): number[][] {
-        const availableMoves: number[][] = []
+    public getAvailableMoves(board: Board, start: Hex): Hex[] {
+        const availableMoves: Hex[] = []
         for (const value of this.delta) {
             let startQ = start.q, startR = start.r
             
@@ -59,11 +60,12 @@ export default class Bishop extends Piece {
             const deltaR = parseInt(deltas[1])
             for (;;) {
                 const endQ = start.q + deltaQ, endR = start.r + deltaR
+                if (endR < 0 || endR > 10 || endQ < 0 || endQ > 10) break
                 const startHex = board.getHex(startQ, startR)
                 const endHex = board.getHex(endQ, endR)
 
-                if (endQ < 0 || endR < 0 || endQ < 0 || endQ > 10 || endHex.piece === null) break
-                if (this.canMove(board, startHex, endHex)) availableMoves.push([endQ, endR])
+                if (endHex.piece === null) break
+                if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
                 else break
 
                 startQ = endQ
@@ -71,5 +73,9 @@ export default class Bishop extends Piece {
             }
         }
         return availableMoves
+    }
+
+    public ascii(): string {
+        return this.white ? 'wb' : 'bb'
     }
 }

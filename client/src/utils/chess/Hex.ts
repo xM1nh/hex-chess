@@ -37,7 +37,7 @@ export default class Hex {
 
     public getPixel(size: number) {
         const x = size * (3/2 * this.q)
-        const y = size * (Math.sqrt(3/2) * this.q + Math.sqrt(3) * this.r)
+        const y = size * (Math.sqrt(3)/2 * this.q + Math.sqrt(3) * this.r)
         return [x, y]
     }
 }

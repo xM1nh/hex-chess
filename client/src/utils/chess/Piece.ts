@@ -32,5 +32,6 @@ export default abstract class Piece {
     }
 
     public abstract canMove(board: Board, start: Hex, end: Hex): boolean 
-    public abstract getAvailableMoves(board: Board, start: Hex): number[][]
+    public abstract getAvailableMoves(board: Board, start: Hex): Hex[]
+    public abstract ascii(): string
 }

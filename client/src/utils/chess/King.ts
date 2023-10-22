@@ -22,7 +22,7 @@ export default class King extends Piece {
     }
 
     public canMove(board: Board, start: Hex, end: Hex): boolean {
-        if (end.piece?.white && this.white) {
+        if (end.piece?.white === this.white) {
             return false
         }
         if (end.piece === null) return false
@@ -40,7 +40,7 @@ export default class King extends Piece {
                     const q = parseInt(value.split(',')[1])
                     const r = parseInt(value.split(',')[0])
                     const activeHex = board.getHex(q, r)
-                    if (!activeHex.piece?.canMove(board, activeHex, end)) return false
+                    if (activeHex.piece?.canMove(board, activeHex, end)) return false
                 }
     
                 return true
@@ -50,26 +50,26 @@ export default class King extends Piece {
         }
     }
 
-    public getAvailableMoves(board: Board, start: Hex): number[][] {
-        const availableMoves: number[][] = []
-        for (const value of this.delta) {
-            let startQ = start.q, startR = start.r
-            
+    public getAvailableMoves(board: Board, start: Hex): Hex[] {
+        const availableMoves: Hex[] = []
+        for (const value of this.delta) {            
             const deltas = value.split(',')
             const deltaQ = parseInt(deltas[0])
             const deltaR = parseInt(deltas[1])
             
             const endQ = start.q + deltaQ, endR = start.r + deltaR
-            const startHex = board.getHex(startQ, startR)
+            if (endR < 0 || endR > 10 || endQ < 0 || endQ > 10) continue
+            const startHex = board.getHex(start.q, start.r)
             const endHex = board.getHex(endQ, endR)
 
-            if (endQ < 0 || endR < 0 || endQ < 0 || endQ > 10 || endHex.piece === null) break
-            if (this.canMove(board, startHex, endHex)) availableMoves.push([endQ, endR])
-            else break
-
-            startQ = endQ
-            startR = endR
+            if (endHex.piece === null) continue
+            if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
+            else continue
         }
         return availableMoves
+    }
+
+    public ascii(): string {
+        return this.white ? 'wk' : 'bk'
     }
 }

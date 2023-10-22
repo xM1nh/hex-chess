@@ -22,7 +22,7 @@ export default class Knight extends Piece {
     }
     
     public canMove(board: Board, start: Hex, end: Hex): boolean {
-        if (end.piece?.white && this.white) {
+        if (end.piece?.white === this.white) {
             return false
         }
         
@@ -38,26 +38,28 @@ export default class Knight extends Piece {
         }
     }
 
-    public getAvailableMoves(board: Board, start: Hex): number[][] {
-        const availableMoves: number[][] = []
+    public getAvailableMoves(board: Board, start: Hex): Hex[] {
+        const availableMoves: Hex[] = []
         for (const value of this.delta) {
-            let startQ = start.q, startR = start.r
             
             const deltas = value.split(',')
             const deltaQ = parseInt(deltas[0])
             const deltaR = parseInt(deltas[1])
             
             const endQ = start.q + deltaQ, endR = start.r + deltaR
-            const startHex = board.getHex(startQ, startR)
+            if (endR < 0 || endR > 10 || endQ < 0 || endQ > 10) continue
+            const startHex = board.getHex(start.q, start.r)
             const endHex = board.getHex(endQ, endR)
 
-            if (endQ < 0 || endR < 0 || endQ < 0 || endQ > 10 || endHex.piece === null) break
-            if (this.canMove(board, startHex, endHex)) availableMoves.push([endQ, endR])
-            else break
+            if (endHex.piece === null) continue
+            if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
+            else continue
 
-            startQ = endQ
-            startR = endR
         }
         return availableMoves
+    }
+
+    public ascii(): string {
+        return this.white ? 'wn' : 'bn'
     }
 }

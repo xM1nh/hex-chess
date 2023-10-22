@@ -1,6 +1,9 @@
 import Board from "./Board";
 import Move from "./Move";
+import Pawn from "./Pawn";
 import Player from "./Player";
+import lodash from 'lodash'
+import Piece from "./Piece";
 
 type GameState = 'ACTIVE' | 'BLACK_WIN' | 'WHITE_WIN' | 'FORFEIT' | 'STALEMATE' | 'RESIGN'
 const GAME_STATE: {
@@ -21,7 +24,6 @@ export default class Game {
     private _players: Player[]
     private _currentTurn: Player
     private _state: GameState
-    private _history: Move[] = []
 
     constructor(p1: Player, p2: Player) {
         this._board = new Board()
@@ -36,7 +38,6 @@ export default class Game {
         this._board = new Board()
         if (p1.white) this._currentTurn = p1
         else this._currentTurn = p2
-        this._history = []
         this._state = 'ACTIVE'
     }
 
@@ -64,22 +65,14 @@ export default class Game {
         this._state = state
     }
 
-    public get history(): Move[] {
-        return this._history
-    }
-
-    private _addToHistory(move: Move) {
-        this._history.push(move)
-    }
-
     public isEnd() {
         return this.state !== GAME_STATE.ACTIVE
     }
 
-    public playerMove(player: Player, startQ: number, startR: number, endQ: number, endR: number) {
+    public playerMove(player: Player, startQ: number, startR: number, endQ: number, endR: number, promotion?: Piece) {
         const startHex = this.board.getHex(startQ, startR)
         const endHex = this.board.getHex(endQ, endR)
-        const move = new Move(player, startHex, endHex)
+        const move = new Move(player, startHex, endHex, promotion)
         return this._makeMove(move, player)
     }
 
@@ -92,6 +85,7 @@ export default class Game {
         if (player !== this.turn) return false
         if (piece.white !== player.white) return false
         if (!piece.canMove(this.board, move.start, move.end)) return false
+        if (lodash.isEqual(move.start, move.end)) return false
 
         const startQ = move.start.q
         const startR = move.start.r
@@ -104,18 +98,29 @@ export default class Game {
         this._internalBoard.setHex(endQ, endR, piece)
         if (this._internalBoard.isCheck(color)) return false
 
-
         if (endPiece) {
             endPiece.killed = true
             move.pieceKilled = endPiece
         }
         move.end.piece = move.start.piece
         move.start.piece = undefined
+
         this.board.setHex(startQ, startR, undefined)
-        this.board.setHex(endQ, endR, piece)
+
+        //Promotion
+        if (move.promotion) {
+            if (!(piece instanceof Pawn)) return false
+            const end = piece.white ? this.board.lastRow : this.board.firstRow
+            if (!end.has(`${endQ},${endR}`)) return false 
+            this.board.setHex(endQ, endR, move.promotion)
+        } else {
+            this.board.setHex(endQ, endR, move.end.piece)
+        }
+
+
         this._copyBoard()
 
-        this._addToHistory(move)
+        this.board.addToHistory(move)
 
         if (this.board.isCheckMate(color)) {
             if (color === 'w') this.state = 'BLACK_WIN'
