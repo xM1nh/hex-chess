@@ -25,8 +25,8 @@ const DEFAULT_POSITION =
 export default class Board {
     private _board: Hex[][] = new Array<Hex[]>()
     private _history: Move[] = []
-    private _activeWhiteHex: Set<string> = new Set<string>()
-    private _activeBlackHex: Set<string> = new Set<string>()
+    private _activeWhiteHex: number[][] = []
+    private _activeBlackHex: number[][] = []
     private _kings: {w: Hex, b: Hex} = {
         w: new Hex(0, 0, null),
         b: new Hex(0, 0, null)
@@ -52,11 +52,11 @@ export default class Board {
         return this._board
     }
 
-    public get activeWhiteHex(): Set<string> {
+    public get activeWhiteHex(): number[][] {
         return this._activeWhiteHex
     }
 
-    public get activeBlackHex(): Set<string> {
+    public get activeBlackHex(): number[][] {
         return this._activeBlackHex
     }
 
@@ -96,23 +96,19 @@ export default class Board {
         this._history.push(move)
     }
 
-    public isActiveHex(hex: Hex) {
-        return this.activeWhiteHex.has(`${hex.r},${hex.q}`) || this.activeBlackHex.has(`${hex.r},${hex.q}`)
-    }
-
     public addActiveHex(hex: Hex) {
         if (hex.piece?.white) {
-            this._activeWhiteHex.add(`${hex.r},${hex.q}`)
+            this._activeWhiteHex.push([hex.r,hex.q])
         } else {
-            this._activeBlackHex.add(`${hex.r},${hex.q}`)
+            this._activeBlackHex.push([hex.r,hex.q])
         }
     }
 
     public deleteActiveHex(hex: Hex) {
         if (hex.piece?.white) {
-            this._activeWhiteHex.add(`${hex.r},${hex.q}`)
+            this._activeWhiteHex = this._activeWhiteHex.filter(element => !(element[0] === hex.r && element[1] === hex.q))
         } else {
-            this._activeBlackHex.add(`${hex.r},${hex.q}`)
+            this._activeBlackHex = this._activeBlackHex.filter(element => !(element[0] === hex.r && element[1] === hex.q))
         }
     }
 
@@ -138,11 +134,11 @@ export default class Board {
                 row.push(new Hex(q, r, new PieceConstructor(white)))
 
                 if (piece < 'a') {
-                    this._activeWhiteHex.add(`${r},${q}`)
+                    this._activeWhiteHex.push([r, q])
                     this.kings.w = new Hex(q, r, new PieceConstructor(white))
                 }
                 else {
-                    this._activeBlackHex.add(`${r},${q}`)
+                    this._activeBlackHex.push([r, q])
                     this.kings.b = new Hex(q, r, new PieceConstructor(white))
                 }
             }
@@ -160,14 +156,41 @@ export default class Board {
         this._board[r][q].piece = piece
     }
 
+    public getAvailableMoves(color: Color) {
+        const activeHexes = color === 'w' ? this.activeWhiteHex : this.activeBlackHex
+        const availableMoves = []
+        for (const value of activeHexes) {
+            const q = value[1]
+            const r = value[0]
+            const activeHex = this.getHex(q, r)
+            const activePiece = activeHex.piece as Piece
+            availableMoves.push(...activePiece.getAvailableMoves(this, activeHex))
+        }
+
+        return availableMoves
+    }
+
     public isCheck(color: Color): boolean {
         const kingHex = color === 'w' ? this.kings.w : this.kings.b
         const opponentActiveHex = color === 'w' ? this.activeBlackHex : this.activeWhiteHex
             for (const value of opponentActiveHex) {
-                const q = parseInt(value.split(',')[1])
-                const r = parseInt(value.split(',')[0])
+                const q = value[1]
+                const r = value[0]
                 const activeHex = this.getHex(q, r)
-                if (!activeHex.piece?.canMove(this, activeHex, kingHex)) return true
+
+                //Separate check for Pawn capture
+                if (activeHex.piece instanceof Pawn) {
+                    const deltaQ = kingHex.q - activeHex.q
+                    const deltaR = kingHex.r - activeHex.r
+                    if (color === 'w') {
+                        if ((deltaQ === -1 && deltaR === 0) || (deltaQ === 1 && deltaR === -1)) return true
+                    }
+                    else {
+                        if ((deltaQ === -1 && deltaR === 1) || (deltaQ === 1 && deltaR === 0)) return true
+                    }
+                } else {
+                    if (activeHex.piece?.canMove(this, activeHex, kingHex)) return true
+                }
             }
         return false
     }
@@ -175,10 +198,10 @@ export default class Board {
     public isCheckMate(color: Color): boolean {
         const activeHexes = color === 'w' ? this.activeWhiteHex : this.activeBlackHex
         for (const value of activeHexes) {
-            const q = parseInt(value.split(',')[1])
-                const r = parseInt(value.split(',')[0])
-                const activeHex = this.getHex(q, r)
-                if ((activeHex.piece as Piece).getAvailableMoves(this, activeHex).length > 0) return false
+            const q = value[1]
+            const r = value[0]
+            const activeHex = this.getHex(q, r)
+            if ((activeHex.piece as Piece).getAvailableMoves(this, activeHex).length > 0) return false
         }
 
         if (this.isCheck(color)) return true
@@ -188,10 +211,10 @@ export default class Board {
     public isStaleMate(color: Color): boolean {
         const activeHexes = color === 'w' ? this.activeWhiteHex : this.activeBlackHex
         for (const value of activeHexes) {
-            const q = parseInt(value.split(',')[1])
-                const r = parseInt(value.split(',')[0])
-                const activeHex = this.getHex(q, r)
-                if ((activeHex.piece as Piece).getAvailableMoves(this, activeHex).length > 0) return false
+            const q = value[1]
+            const r = value[0]
+            const activeHex = this.getHex(q, r)
+            if ((activeHex.piece as Piece).getAvailableMoves(this, activeHex).length > 0) return false
         }
 
         if (!this.isCheck(color)) return true

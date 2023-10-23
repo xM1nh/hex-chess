@@ -39,14 +39,16 @@ export default class Queen extends Piece {
                 const delta = `${q/direction},${r/direction},${s/direction}`
     
                 if (this.delta.has(delta)) {
+                    let middlePiece: Piece | undefined = undefined
                     let startQ = start.q, startR = start.r
-    
+                    
                     for (;;) {
-                        const endQ = startQ - q, endR = startR - r
-                        
-                        if (endQ === end.q && endR === end.r) return true
-                        if (board.getHex(endQ, endR).piece) return false
+                        if (middlePiece) break
+                        const endQ = startQ - q/direction, endR = startR - r/direction
     
+                        if (endQ === end.q && endR === end.r) return true
+                        if (board.getHex(endQ, endR).piece) middlePiece = board.getHex(endQ, endR).piece as Piece
+        
                         startQ = endQ
                         startR = endR
                     }
@@ -58,14 +60,16 @@ export default class Queen extends Piece {
                 const delta = `${q/factor},${r/factor},${s/factor}`
     
                 if (this.delta.has(delta)) {
+                    let middlePiece: Piece | undefined = undefined
                     let startQ = start.q, startR = start.r
-    
+                    
                     for (;;) {
-                        const endQ = startQ - q, endR = startR - r
+                        if (middlePiece) break
+                        const endQ = startQ - q/factor, endR = startR - r/factor
                         
                         if (endQ === end.q && endR === end.r) return true
-                        if (board.getHex(endQ, endR).piece) return false
-    
+                        if (board.getHex(endQ, endR).piece) middlePiece = board.getHex(endQ, endR).piece as Piece
+        
                         startQ = endQ
                         startR = endR
                     }
@@ -79,6 +83,7 @@ export default class Queen extends Piece {
     public getAvailableMoves(board: Board, start: Hex): Hex[] {
         const availableMoves: Hex[] = []
         for (const value of this.delta) {
+            let middlePiece: Piece | undefined = undefined
             let startQ = start.q, startR = start.r
             
             const deltas = value.split(',')
@@ -86,12 +91,14 @@ export default class Queen extends Piece {
             const deltaR = parseInt(deltas[1])
 
             for (;;) {
+                if (middlePiece) break
                 const endQ = startQ + deltaQ, endR = startR + deltaR
                 if (endR < 0 || endR > 10 || endQ < 0 || endQ > 10) break
                 const startHex = board.getHex(startQ, startR)
                 const endHex = board.getHex(endQ, endR)
 
                 if (endHex.piece === null) break
+                if (endHex.piece && endHex.piece.white !== this.white) middlePiece = endHex.piece
                 if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
                 else break
 
