@@ -2,11 +2,18 @@
     position: absolute;
     background-size: contain;
     background-repeat: no-repeat;
+    z-index: 2;
 }
 
 .hint {
     border-radius: 50%;
     background-color: rgba(0,0,0,0.1);
+}
+
+.capture {
+    border-radius: 50%;
+    background-color: rgba(0,0,0,0);
+    outline: 30px solid rgba(0,0,0,0.1);
 }
 
 .bp {

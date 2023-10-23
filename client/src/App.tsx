@@ -3,12 +3,12 @@ import Board from './components/board/Board'
 import { HumanPlayer } from './utils/chess/Player'
 
 const App = () => {
-  const p1 = new HumanPlayer(true)
-  const p2 = new HumanPlayer(false)
-  const game = new Game(p1, p2)
+  const player = new HumanPlayer(true)
+  const game = new Game(player)
+  const moveFn = game.playerMove.bind(game)
   return (
 		<div>
-      <Board board={game.board}/>
+      <Board board={game.board} moveFn={moveFn} player={player}/>
     </div>
   )
 }
