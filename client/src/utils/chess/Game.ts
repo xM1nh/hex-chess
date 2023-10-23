@@ -4,6 +4,7 @@ import Pawn from "./Pawn";
 import Player from "./Player";
 import lodash from 'lodash'
 import Piece from "./Piece";
+import King from "./King";
 
 type GameState = 'ACTIVE' | 'BLACK_WIN' | 'WHITE_WIN' | 'FORFEIT' | 'STALEMATE' | 'RESIGN'
 const GAME_STATE: {
@@ -21,39 +22,35 @@ const GAME_STATE: {
 export default class Game {
     private _board: Board
     private _internalBoard: Board
-    private _players: Player[]
-    private _currentTurn: Player
+    private _player: Player
+    private _currentTurn: Player | undefined
     private _state: GameState
 
-    constructor(p1: Player, p2: Player) {
+    constructor(player: Player) {
         this._board = new Board()
         this._internalBoard = new Board()
-        this._players = [p1, p2]
-        if (p1.white) this._currentTurn = p1
-        else this._currentTurn = p2
+        this._player = player
+        if (player.white) this._currentTurn = player
         this._state = 'ACTIVE'
     }
 
-    public init(p1: Player, p2: Player) {
+    public init(player: Player) {
         this._board = new Board()
-        if (p1.white) this._currentTurn = p1
-        else this._currentTurn = p2
+        this._internalBoard = new Board()
+        this._player = player
+        if (player.white) this._currentTurn = player
         this._state = 'ACTIVE'
-    }
-
-    private _copyBoard() {
-        this._internalBoard = structuredClone(this.board)
     }
 
     public get board() {
         return this._board
     }
 
-    public get turn(): Player {
+    public get turn(): Player | undefined {
         return this._currentTurn
     }
 
-    public set turn(player: Player) {
+    public set turn(player: Player | undefined) {
         this._currentTurn = player
     }
 
@@ -96,41 +93,70 @@ export default class Game {
         const color = player.white ? 'w' : 'b'
         this._internalBoard.setHex(startQ, startR, undefined)
         this._internalBoard.setHex(endQ, endR, piece)
-        if (this._internalBoard.isCheck(color)) return false
+        if (piece instanceof King) {
+            if (color === 'w') this._internalBoard.kings.w = move.end
+            else this._internalBoard.kings.b = move.end
+        }
+        if (this._internalBoard.isCheck(color)) {
+            //Undo to previous state
+            this._internalBoard.setHex(startQ, startR, piece)
+            this._internalBoard.setHex(endQ, endR, endPiece)
+            this._internalBoard.kings.w = this._board.kings.w
+            this._internalBoard.kings.b = this._board.kings.b
+            return false
+        }
 
         if (endPiece) {
             endPiece.killed = true
             move.pieceKilled = endPiece
         }
+
+        this._board.deleteActiveHex(move.start)
+        this._internalBoard.deleteActiveHex(move.start)
+
         move.end.piece = move.start.piece
         move.start.piece = undefined
 
-        this.board.setHex(startQ, startR, undefined)
+        if (piece instanceof Pawn) {
+            piece.hasMoved = true
+        }
+
+        if (piece instanceof King) {
+            if (color === 'w') this._board.kings.w = move.end
+            else this._board.kings.b = move.end
+        }
+
+        this._board.setHex(startQ, startR, undefined)
+        this._internalBoard.setHex(startQ, startR, undefined)
 
         //Promotion
         if (move.promotion) {
             if (!(piece instanceof Pawn)) return false
-            const end = piece.white ? this.board.lastRow : this.board.firstRow
+            const end = piece.white ? this._board.lastRow : this._board.firstRow
             if (!end.has(`${endQ},${endR}`)) return false 
-            this.board.setHex(endQ, endR, move.promotion)
+            this._board.setHex(endQ, endR, move.promotion)
+            this._internalBoard.setHex(endQ, endR, move.promotion)
+            this._board.addActiveHex(move.end)
+            this._internalBoard.addActiveHex(move.end)
         } else {
-            this.board.setHex(endQ, endR, move.end.piece)
+            this._board.setHex(endQ, endR, move.end.piece)
+            this._internalBoard.setHex(endQ, endR, move.end.piece)
+            this._board.addActiveHex(move.end)
+            this._internalBoard.addActiveHex(move.end)
         }
 
+        this._board.addToHistory(move)
+        this._internalBoard.addToHistory(move)
 
-        this._copyBoard()
-
-        this.board.addToHistory(move)
-
-        if (this.board.isCheckMate(color)) {
+        if (this._board.isCheckMate(color)) {
             if (color === 'w') this.state = 'BLACK_WIN'
             else this.state = 'WHITE_WIN'
         }
 
-        if (this.board.isStaleMate(color)) this.state = 'STALEMATE'
+        if (this._board.isStaleMate(color)) this.state = 'STALEMATE'
 
-        if (this.turn === this._players[0]) this.turn = this._players[1]
-        else this.turn = this._players[0]
+        // if (!this.turn) this.turn = this._player
+        // else this.turn = undefined
 
         return true
     }

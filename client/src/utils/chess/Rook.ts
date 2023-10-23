@@ -30,14 +30,16 @@ export default class Rook extends Piece {
         if (end.piece === null) return false
         else {   
             if (this.delta.has(delta)) {
+                let middlePiece: Piece | undefined = undefined
                 let startQ = start.q, startR = start.r
                 
                 //break condition. rook can only travel for a maximum of 11 hexes
-                for (let i = 0; i < 11; i++) {
-                    const endQ = startQ - q, endR = startR - r
-                    
+                for (;;) {
+                    if (middlePiece) break
+                    const endQ = startQ - q/factor, endR = startR - r/factor
+
                     if (endQ === end.q && endR === end.r) return true
-                    if (board.getHex(endQ, endR).piece) return false
+                    if (board.getHex(endQ, endR).piece) middlePiece = board.getHex(endQ, endR).piece as Piece
     
                     startQ = endQ
                     startR = endR
@@ -51,12 +53,14 @@ export default class Rook extends Piece {
     public getAvailableMoves(board: Board, start: Hex): Hex[] {
         const availableMoves: Hex[] = []
         for (const value of this.delta) {
+            let middlePiece: Piece | undefined = undefined
             let startQ = start.q, startR = start.r
             
             const deltas = value.split(',')
             const deltaQ = parseInt(deltas[0])
             const deltaR = parseInt(deltas[1])
             for (let i = 0; i < 11; i++) {
+                if (middlePiece) break
                 const endQ = startQ + deltaQ, endR = startR + deltaR
 
                 if (endR < 0 || endR > 10 || endQ < 0 || endQ > 10) break
@@ -64,6 +68,7 @@ export default class Rook extends Piece {
                 const endHex = board.getHex(endQ, endR)
 
                 if (endHex.piece === null) break
+                if (endHex.piece && endHex.piece.white !== this.white) middlePiece = endHex.piece
                 if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
                 else break
 

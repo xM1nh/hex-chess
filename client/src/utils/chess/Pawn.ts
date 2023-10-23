@@ -49,7 +49,7 @@ export default class Pawn extends Piece {
 
         const q = end.q - start.q
         const r = end.r - start.r
-        const s = (-start.q - start.r) - (-end.q - end.r)
+        const s = (-end.q - end.r) - (-start.q - start.r)
 
         if (end.piece === null) return false
         else {
@@ -73,8 +73,22 @@ export default class Pawn extends Piece {
                 }
                     if (q) return false
                     if (!this.hasMoved) {
-                        if (this.white) return r === -1 || r === -2
-                        else return r === 1 || r === 2
+                        if (this.white) {
+                            if (r === -1) return true
+                            if (r === -2) {
+                                const middleHexPiece = board.getHex(start.q, start.r -1).piece
+                                return middleHexPiece ? false : true
+                            }
+                            else return false
+                        }
+                        else {
+                            if (r === 1) return true
+                            if (r === 2) {
+                                const middleHexPiece = board.getHex(start.q, start.r + 1).piece
+                                return middleHexPiece ? false : true
+                            }
+                            else return false
+                        }
                     } else {
                         if (this.white) return r === -1
                         else return r === 1
@@ -89,12 +103,12 @@ export default class Pawn extends Piece {
     }
 
     public getAvailableMoves(board: Board, start: Hex): Hex[] {
+        const startHex = board.getHex(start.q, start.r)
         const captureDelta = this.white ? this._wCaptureDelta : this._bCaptureDelta
         const delta = this.white ? this._delta : this._bDelta
         const availableMoves: Hex[] = []
+
         for (const value of delta) {
-            const startHex = board.getHex(start.q, start.r)
-            
             const deltaR = parseInt(value.split(',')[1])
             
             let endR = start.r + deltaR
@@ -103,7 +117,6 @@ export default class Pawn extends Piece {
             let endHex = board.getHex(start.q, endR)
             if (endHex.piece === null) continue
             if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
-            else continue
 
             if (!this.hasMoved) {
                 endR = start.r + 2 * deltaR
@@ -114,19 +127,18 @@ export default class Pawn extends Piece {
         }
 
         for (const value of captureDelta) {
-            const startHex = board.getHex(start.q, start.r)
-            
+            const deltaQ = parseInt(value.split(',')[0])   
             const deltaR = parseInt(value.split(',')[1])
             
             const endR = start.r + deltaR
-            if (endR < 0 || endR > 10 ) continue
+            const endQ = start.q + deltaQ
+            if (endR < 0 || endR > 10 || endQ < 0 || endQ > 10) continue
 
-            const endHex = board.getHex(start.q, endR)
-            if (!this.canEnPassant && !endHex.piece) continue
+            const endHex = board.getHex(endQ, endR)
             if (this.canMove(board, startHex, endHex)) availableMoves.push(endHex)
             else continue
-
         }
+
         return availableMoves
     }
 
